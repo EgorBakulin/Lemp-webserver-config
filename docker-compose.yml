@@ -1,0 +1,58 @@
+version: '3'
+
+networks:
+    LEMP:
+
+services:
+    nginx:
+        image: nginx:latest
+        ports:
+            - "80:80"
+        volumes:
+            - ./hosts:/etc/nginx/conf.d
+            - ./www:/var/www
+            - ./logs:/var/log/nginx
+        links:
+            - php
+        environment:
+            - NGINX_PORT=80
+        networks:
+            - LEMP
+    php:
+        build:
+            dockerfile: ./images/php/Dockerfile
+            context: .
+
+        links:
+            - mysql
+        volumes:
+            - ./www:/var/www
+        networks:
+            - LEMP
+    mysql:
+        image: mysql
+        ports:
+            - "3306:3306"
+        volumes:
+            - ./mysql:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: secret
+        networks:
+            - LEMP
+    pma:
+        image: phpmyadmin/phpmyadmin
+        container_name: LEMP_phpMyAdmin
+        links:
+            - mysql:mysql
+        ports:
+            - 8183:80
+        environment:
+            PMA_HOST: mysql
+            MYSQL_ROOT_PASSWORD: secret
+            MYSQL_USER: local
+            MYSQL_PASSWORD: secret
+            MYSQL_DATABASE: mynewdb 
+        depends_on:
+            - mysql
+        networks:
+            - LEMP
